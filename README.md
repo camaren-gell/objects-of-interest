@@ -8,7 +8,7 @@ Welcome to the **Objects of Interest** team repository!
 ## Team Members
 - Camaren Gell (qha16)
 - Katalyna Hinojosa (kzy18)
-- Franceli Gonzalez ()
+- Franceli Gonzalez (tdq14)
 
 ## About This Repository
 This repository contains our team's assignments, projects, and other work for our Object-Oriented Programming course.
