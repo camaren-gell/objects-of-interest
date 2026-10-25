@@ -1,28 +1,29 @@
+
 package chess.utils;
 
-public class InputValidator{
+import java.util.Locale;
 
-	public static boolean isValidMoveFormat(String moveInput){
-	
-		if (moveInput.length() != 5){ // validates length
-			return false;
-}
-		if (moveInput.charAt(2) != ' ' ){ // validates space
-			return false;	
-}
-		if (moveInput.charAt(0) < 'A' || moveInput.charAt(0) > 'H' ){ // validates first action letter
-			return false;
-}
-		if (moveInput.charAt(3) < 'A' || moveInput.charAt(3) > 'H' ){ //validates second action letter
-			return false;
-}
-		if (moveInput.charAt(1) < '1' || moveInput.charAt(1) > '8'){ // validate the first row
-			return false;
-}
-		if (moveInput.charAt(4) < '1' || moveInput.charAt(4) > '8'){ // validate the second row
-			return false;
-}
-	return true;	
+/**
+ * Validates chess move input.
+ */
+public class InputValidator {
 
-		}
-	}
+    /**
+     * Prevents creating InputValidator objects.
+     */
+    private InputValidator() { }
+
+    /**
+     * Checks if a move is in the required chess format.
+     *
+     * @param moveInput the move entered by the player
+     * @return true if the move format is valid, false otherwise
+     */
+    public static boolean isValidMoveFormat(String moveInput) {
+
+        return moveInput != null &&
+               moveInput.trim()
+                        .toUpperCase(Locale.ROOT)
+                        .matches("[A-H][1-8]\\s+[A-H][1-8]");
+    }
+}
