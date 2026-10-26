@@ -6,15 +6,15 @@
 
 
 
-\*\*1. Did they complete their assigned tasks? — 5/5\*\*
+\*\*1. Did they complete their assigned tasks? — 10/10\*\*
 
 
 
-\*\*2. How well did they communicate and work with the team? — 5/5\*\*
+\*\*2. How well did they communicate and work with the team? — 10/10\*\*
 
 
 
-\*\*3. How much did they contribute to the project? — 5/5\*\*
+\*\*3. How much did they contribute to the project? — 10/10\*\*
 
 
 
@@ -32,15 +32,15 @@ Camaren took the lead in development and communicated gaps in our integration. H
 
 
 
-\*\*1. Did they complete their assigned tasks? — 5/5\*\*
+\*\*1. Did they complete their assigned tasks? — 10/10\*\*
 
 
 
-\*\*2. How well did they communicate and work with the team? — 5/5\*\*
+\*\*2. How well did they communicate and work with the team? — 10/10\*\*
 
 
 
-\*\*3. How much did they contribute to the project? — 5/5\*\*
+\*\*3. How much did they contribute to the project? — 10/10\*\*
 
 
 
@@ -55,6 +55,4 @@ Kataylna was a great team member. Weeks before the assignment was due, she took 
 
 
 \*\*Rating Scale:\*\* 1 = Poor · 2 = Fair · 3 = Good · 4 = Very Good · 5 = Excellent
-
-
 
