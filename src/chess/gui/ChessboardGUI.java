@@ -4,9 +4,12 @@ package chess.gui;
 import chess.board.Board;
 import chess.board.Position;
 import chess.pieces.Piece;
+import chess.utils.GameStorage;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 
 public class ChessboardGUI extends JFrame {
 
@@ -20,6 +23,7 @@ public class ChessboardGUI extends JFrame {
 
     private final Board board;
     private final JButton[][] squares = new JButton[SIZE][SIZE];
+    private chess.pieces.Color currentTurn = chess.pieces.Color.WHITE;
 
     public ChessboardGUI() {
 
@@ -28,6 +32,10 @@ public class ChessboardGUI extends JFrame {
         setTitle("Chess Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+        // Attach Game Menu Bar (GUI Feature 1)
+        GameMenuBar menuBar = new GameMenuBar(this::handleNewGame, this::handleSaveGame, this::handleLoadGame);
+        setJMenuBar(menuBar);
 
         JPanel chessboard = new JPanel(
                 new GridLayout(SIZE, SIZE)
@@ -42,6 +50,7 @@ public class ChessboardGUI extends JFrame {
                 square.setOpaque(true);
                 square.setBorderPainted(false);
                 square.setFocusPainted(false);
+                square.setMargin(new Insets(0, 0, 0, 0));
 
                 // Alternate the square colors.
                 if ((row + col) % 2 == 0) {
@@ -65,6 +74,40 @@ public class ChessboardGUI extends JFrame {
 
         setSize(650, 650);
         setLocationRelativeTo(null);
+    }
+
+    // Handlers for GUI Feature 1: Menu Bar
+    private void handleNewGame() {
+        board.initializeBoard();
+        currentTurn = chess.pieces.Color.WHITE;
+        updateBoard();
+    }
+
+    private void handleSaveGame() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File saveFile = chooser.getSelectedFile();
+            try {
+                GameStorage.save(board, currentTurn, saveFile);
+                JOptionPane.showMessageDialog(this, "Game saved successfully!");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to save game: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void handleLoadGame() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File saveFile = chooser.getSelectedFile();
+            try {
+                currentTurn = GameStorage.load(saveFile, board);
+                updateBoard();
+                JOptionPane.showMessageDialog(this, "Game loaded successfully!");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to load game: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     // Display the pieces from the existing Board class.
@@ -121,4 +164,3 @@ public class ChessboardGUI extends JFrame {
         });
     }
 }
-

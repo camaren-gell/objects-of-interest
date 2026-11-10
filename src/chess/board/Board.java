@@ -1,4 +1,3 @@
-
 package chess.board;
 
 import chess.pieces.Bishop;
@@ -112,5 +111,22 @@ public class Board {
         piece.move(to);
 
         return true;
+    }
+
+        // Removes every piece from the board.
+    public void clear() {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                squares[row][col] = null;
+            }
+        }
+    }
+
+    // Places a piece on a square (used when loading a saved game).
+    public void setPiece(Position position, Piece piece) {
+        if (position == null || !position.isInBounds()) {
+            throw new IllegalArgumentException("Invalid board position.");
+        }
+        squares[position.getRow()][position.getColumn()] = piece;
     }
 }
