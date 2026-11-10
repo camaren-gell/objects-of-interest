@@ -11,7 +11,7 @@ import javax.swing.KeyStroke;
 public class GameMenuBar extends JMenuBar {
     /** Builds the menu and connects each item to its action. */
     public GameMenuBar(Runnable onNewGame, Runnable onSave, Runnable onLoad) {
-        JMenu menu = new JMenu("Game");
+        JMenu menu = new JMenu("Game Menu");
         menu.add(item("New Game", KeyEvent.VK_N, onNewGame));
         menu.add(item("Save Game", KeyEvent.VK_S, onSave));
         menu.add(item("Load Game", KeyEvent.VK_O, onLoad));
