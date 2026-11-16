@@ -45,18 +45,10 @@ public class ChessboardGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Phase 2: New, Save, and Load menu
-        GameMenuBar menuBar = new GameMenuBar(
-                this::handleNewGame,
-                this::handleSaveGame,
-                this::handleLoadGame
-        );
-        setJMenuBar(menuBar);
-
-        // Settings button
-        JPanel topPanel = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT)
-        );
+        // Top row: Game Menu on the left, turn label and Settings on the right
+        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         JButton settingsButton = new JButton("⚙ Settings");
 
@@ -65,9 +57,20 @@ public class ChessboardGUI extends JFrame {
             settings.setVisible(true);
         });
 
+        // Phase 2: New, Save, and Load menu button
+        GameMenuButton gameMenuButton = new GameMenuButton(
+                settingsButton,
+                this::handleNewGame,
+                this::handleSaveGame,
+                this::handleLoadGame
+        );
+
         turnLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        topPanel.add(turnLabel);
-        topPanel.add(settingsButton);
+        leftPanel.add(gameMenuButton);
+        rightPanel.add(turnLabel);
+        rightPanel.add(settingsButton);
+        topPanel.add(leftPanel, BorderLayout.WEST);
+        topPanel.add(rightPanel, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
         // Chessboard with centered Spider-Man watermark
