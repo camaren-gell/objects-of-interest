@@ -4,9 +4,10 @@ package chess.gui;
 import chess.board.Board;
 import chess.board.Position;
 import chess.pieces.Piece;
+import chess.utils.GameStorage;
 
-import javax.swing.*;
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -22,13 +23,15 @@ public class ChessboardGUI extends JFrame {
 
     private BufferedImage spiderEyesLogo;
 
-    // Default settings
+    // Settings
     private String currentBoardStyle = "Spider-Man";
     private String currentPieceStyle = "Black & Green";
     private String currentBoardSize = "Medium";
 
-    public ChessboardGUI() {
+    // Phase 2 game storage
+    private chess.pieces.Color currentTurn = chess.pieces.Color.WHITE;
 
+    public ChessboardGUI() {
         board = new Board();
 
         loadSpiderEyesLogo();
@@ -36,6 +39,14 @@ public class ChessboardGUI extends JFrame {
         setTitle("Spider-Man Chess");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+        // Phase 2: New, Save, and Load menu
+        GameMenuBar menuBar = new GameMenuBar(
+                this::handleNewGame,
+                this::handleSaveGame,
+                this::handleLoadGame
+        );
+        setJMenuBar(menuBar);
 
         // Settings button
         JPanel topPanel = new JPanel(
@@ -52,12 +63,11 @@ public class ChessboardGUI extends JFrame {
         topPanel.add(settingsButton);
         add(topPanel, BorderLayout.NORTH);
 
-        // Chessboard with one centered background logo
+        // Chessboard with centered Spider-Man watermark
         chessboard = new JPanel(new GridLayout(SIZE, SIZE)) {
 
             @Override
             protected void paintComponent(Graphics g) {
-
                 super.paintComponent(g);
 
                 if (currentBoardStyle.equals("Spider-Man")
@@ -70,7 +80,6 @@ public class ChessboardGUI extends JFrame {
                             RenderingHints.VALUE_INTERPOLATION_BILINEAR
                     );
 
-                    // Draw one centered watermark
                     g2.setComposite(
                             AlphaComposite.getInstance(
                                     AlphaComposite.SRC_OVER,
@@ -87,8 +96,10 @@ public class ChessboardGUI extends JFrame {
 
                     g2.drawImage(
                             spiderEyesLogo,
-                            x, y,
-                            logoSize, logoSize,
+                            x,
+                            y,
+                            logoSize,
+                            logoSize,
                             this
                     );
 
@@ -98,11 +109,9 @@ public class ChessboardGUI extends JFrame {
         };
 
         chessboard.setOpaque(true);
-        chessboard.setPreferredSize(
-                new Dimension(600, 600)
-        );
+        chessboard.setPreferredSize(new Dimension(600, 600));
 
-        // Create 64 individual clickable squares
+        // Create 64 individual squares
         for (int row = 0; row < SIZE; row++) {
 
             for (int col = 0; col < SIZE; col++) {
@@ -127,12 +136,11 @@ public class ChessboardGUI extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    // Load the transparent Spider-Man eyes image
+    // Load Spider-Man eyes image
     private void loadSpiderEyesLogo() {
 
         try {
 
-            // First try loading from the Java classpath
             java.net.URL imageURL =
                     getClass().getResource("spider-eyes-watermark.png");
 
@@ -142,7 +150,6 @@ public class ChessboardGUI extends JFrame {
 
             } else {
 
-                // Fallback to the project folder
                 File imageFile = new File(
                         "src/chess/gui/spider-eyes-watermark.png"
                 );
@@ -166,11 +173,12 @@ public class ChessboardGUI extends JFrame {
         }
     }
 
-    // Apply settings from SettingsWindow
+    // Apply SettingsWindow selections
     public void applySettings(
             String boardStyle,
             String pieceStyle,
-            String boardSize) {
+            String boardSize
+    ) {
 
         currentBoardStyle = boardStyle;
         currentPieceStyle = pieceStyle;
@@ -179,7 +187,6 @@ public class ChessboardGUI extends JFrame {
         applyBoardAppearance();
         updateBoard();
 
-        // Actual chessboard size
         int dimension;
 
         switch (currentBoardSize) {
@@ -202,7 +209,6 @@ public class ChessboardGUI extends JFrame {
                 new Dimension(dimension, dimension)
         );
 
-        // Resize chess piece symbols
         int fontSize = dimension / 11;
 
         for (int row = 0; row < SIZE; row++) {
@@ -223,7 +229,7 @@ public class ChessboardGUI extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    // Change board colors based on selected theme
+    // Change board colors
     private void applyBoardAppearance() {
 
         Color light;
@@ -267,7 +273,76 @@ public class ChessboardGUI extends JFrame {
         chessboard.repaint();
     }
 
-    // Display existing chess pieces
+    // Phase 2: New Game
+    private void handleNewGame() {
+
+        board.initializeBoard();
+        currentTurn = chess.pieces.Color.WHITE;
+        updateBoard();
+    }
+
+    // Phase 2: Save Game
+    private void handleSaveGame() {
+
+        JFileChooser chooser = new JFileChooser();
+
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+
+            File saveFile = chooser.getSelectedFile();
+
+            try {
+
+                GameStorage.save(board, currentTurn, saveFile);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Game saved successfully!"
+                );
+
+            } catch (IOException ex) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to save game: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
+    // Phase 2: Load Game
+    private void handleLoadGame() {
+
+        JFileChooser chooser = new JFileChooser();
+
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+
+            File saveFile = chooser.getSelectedFile();
+
+            try {
+
+                currentTurn = GameStorage.load(saveFile, board);
+                updateBoard();
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Game loaded successfully!"
+                );
+
+            } catch (IOException ex) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to load game: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
+    // Display chess pieces
     public void updateBoard() {
 
         for (int row = 0; row < SIZE; row++) {
@@ -294,6 +369,8 @@ public class ChessboardGUI extends JFrame {
                 }
             }
         }
+
+        chessboard.repaint();
     }
 
     // Convert piece symbols
@@ -368,7 +445,7 @@ public class ChessboardGUI extends JFrame {
         }
     }
 
-    // Custom square that allows the center logo to show through
+    // Custom square that allows watermark to show through
     private static class SpiderSquare extends JButton {
 
         public SpiderSquare() {
@@ -377,6 +454,7 @@ public class ChessboardGUI extends JFrame {
             setContentAreaFilled(false);
             setBorderPainted(false);
             setFocusPainted(false);
+            setMargin(new Insets(0, 0, 0, 0));
         }
 
         @Override
@@ -384,7 +462,6 @@ public class ChessboardGUI extends JFrame {
 
             Graphics2D g2 = (Graphics2D) g.create();
 
-            // Slight transparency for the watermark
             g2.setComposite(
                     AlphaComposite.getInstance(
                             AlphaComposite.SRC_OVER,
@@ -402,7 +479,6 @@ public class ChessboardGUI extends JFrame {
 
             g2.dispose();
 
-            // Draw chess pieces normally
             super.paintComponent(g);
         }
     }
@@ -417,5 +493,3 @@ public class ChessboardGUI extends JFrame {
         });
     }
 }
-
-
