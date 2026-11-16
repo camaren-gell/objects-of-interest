@@ -3,6 +3,7 @@ package chess.gui;
 
 import chess.board.Board;
 import chess.board.Position;
+import chess.pieces.King;
 import chess.pieces.Piece;
 import chess.utils.GameStorage;
 
@@ -27,6 +28,10 @@ public class ChessboardGUI extends JFrame {
     private String currentBoardStyle = "Spider-Man";
     private String currentPieceStyle = "Black & Green";
     private String currentBoardSize = "Medium";
+
+    private static final Color SELECTED = new Color(255, 235, 90);
+    private Position selectedPosition = null;
+    private final JLabel turnLabel = new JLabel("White's Turn", SwingConstants.CENTER);
 
     // Phase 2 game storage
     private chess.pieces.Color currentTurn = chess.pieces.Color.WHITE;
@@ -60,6 +65,8 @@ public class ChessboardGUI extends JFrame {
             settings.setVisible(true);
         });
 
+        turnLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        topPanel.add(turnLabel);
         topPanel.add(settingsButton);
         add(topPanel, BorderLayout.NORTH);
 
@@ -122,12 +129,32 @@ public class ChessboardGUI extends JFrame {
                         new Font("Serif", Font.PLAIN, 54)
                 );
 
+                final int selectedRow = row;
+                final int selectedCol = col;
+                square.addActionListener(e -> handleSquareClick(selectedRow, selectedCol));
+
                 squares[row][col] = square;
                 chessboard.add(square);
             }
         }
 
-        add(chessboard, BorderLayout.CENTER);
+        JPanel boardWithCoordinates = new JPanel(new BorderLayout());
+        JPanel columnLabels = new JPanel(new GridLayout(1, SIZE));
+        for (char col = 'A'; col <= 'H'; col++) {
+            JLabel label = new JLabel(String.valueOf(col), SwingConstants.CENTER);
+            label.setFont(new Font("Arial", Font.BOLD, 16));
+            columnLabels.add(label);
+        }
+        JPanel rowLabels = new JPanel(new GridLayout(SIZE, 1));
+        for (int row = 8; row >= 1; row--) {
+            JLabel label = new JLabel(" " + row + " ", SwingConstants.CENTER);
+            label.setFont(new Font("Arial", Font.BOLD, 16));
+            rowLabels.add(label);
+        }
+        boardWithCoordinates.add(columnLabels, BorderLayout.SOUTH);
+        boardWithCoordinates.add(rowLabels, BorderLayout.WEST);
+        boardWithCoordinates.add(chessboard, BorderLayout.CENTER);
+        add(boardWithCoordinates, BorderLayout.CENTER);
 
         applyBoardAppearance();
         updateBoard();
@@ -278,6 +305,7 @@ public class ChessboardGUI extends JFrame {
 
         board.initializeBoard();
         currentTurn = chess.pieces.Color.WHITE;
+        selectedPosition = null;
         updateBoard();
     }
 
@@ -323,6 +351,7 @@ public class ChessboardGUI extends JFrame {
             try {
 
                 currentTurn = GameStorage.load(saveFile, board);
+                selectedPosition = null;
                 updateBoard();
 
                 JOptionPane.showMessageDialog(
@@ -342,8 +371,119 @@ public class ChessboardGUI extends JFrame {
         }
     }
 
+    /**
+     * Handles selecting pieces, moving pieces, capturing
+     * opponents, and detecting King captures.
+     *
+     * @param row clicked row
+     * @param col clicked column
+     */
+    private void handleSquareClick(int row, int col) {
+
+        Position clickedPosition =
+                new Position(row, col);
+
+        Piece clickedPiece =
+                board.getPiece(clickedPosition);
+
+        // First click: select a piece.
+        if (selectedPosition == null) {
+
+            if (clickedPiece == null) {
+                return;
+            }
+
+            if (clickedPiece.getColor() != currentTurn) {
+                return;
+            }
+
+            selectedPosition = clickedPosition;
+
+            updateBoard();
+            return;
+        }
+
+        // Clicking the selected piece again cancels.
+        if (selectedPosition.getRow() == row
+                && selectedPosition.getColumn() == col) {
+
+            selectedPosition = null;
+
+            updateBoard();
+            return;
+        }
+
+        Piece movingPiece =
+                board.getPiece(selectedPosition);
+
+        if (movingPiece == null) {
+
+            selectedPosition = null;
+            updateBoard();
+            return;
+        }
+
+        // Selecting another friendly piece changes selection.
+        if (clickedPiece != null
+                && clickedPiece.getColor()
+                == movingPiece.getColor()) {
+
+            selectedPosition = clickedPosition;
+
+            updateBoard();
+            return;
+        }
+
+        // Remember whether an opponent's King is captured.
+        Piece capturedPiece = clickedPiece;
+
+        boolean moved = board.movePieceFree(
+                selectedPosition,
+                clickedPosition
+        );
+
+        if (!moved) {
+            return;
+        }
+
+        selectedPosition = null;
+
+        updateBoard();
+
+        // Declare the winner if a King is captured.
+        if (capturedPiece instanceof King) {
+
+            String winner =
+                    movingPiece.getColor()
+                    == chess.pieces.Color.WHITE
+                    ? "White"
+                    : "Black";
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    winner + " wins! The opponent's King was captured.",
+                    "Game Over",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            dispose();
+            System.exit(0);
+            return;
+        }
+
+        // Switch turns.
+        currentTurn =
+                currentTurn == chess.pieces.Color.WHITE
+                ? chess.pieces.Color.BLACK
+                : chess.pieces.Color.WHITE;
+
+        updateBoard();
+    }
+
     // Display chess pieces
     public void updateBoard() {
+
+        applyBoardAppearance();
 
         for (int row = 0; row < SIZE; row++) {
 
@@ -370,6 +510,18 @@ public class ChessboardGUI extends JFrame {
             }
         }
 
+        // Preserve the selected-square highlight without resetting the theme.
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                if (selectedPosition != null
+                        && selectedPosition.getRow() == row
+                        && selectedPosition.getColumn() == col) {
+                    squares[row][col].setBackground(SELECTED);
+                }
+            }
+        }
+        turnLabel.setText(currentTurn == chess.pieces.Color.WHITE
+                ? "White's Turn" : "Black's Turn");
         chessboard.repaint();
     }
 
