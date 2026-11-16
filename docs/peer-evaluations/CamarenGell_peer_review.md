@@ -9,7 +9,7 @@
 **3. How much did they contribute to the project? — 10/10**
 
 **Comments:**
-Kat finished the board part early and it worked with my pieces the first time I tested it. She built the Board class, the starting setup, and the display, and added a display test so we could check the layout. She knows the Git workflow well and was a big help with creating the demo video.
+Kat finished the Chess board GUI early which made my part of adding the chess pieces very simple. She coded in a way where I could just implement my section and didn't have to worry about her having to update or change parts of her code to work with mine. She also did the GUI feature 2(Settings window for customization) which she did a very good job with. She added some fun game boards and even added a spiderman theme which I really liked. Overall it looks very professional and well done.
 
 ---
 
@@ -22,4 +22,4 @@ Kat finished the board part early and it worked with my pieces the first time I 
 **3. How much did they contribute to the project? — 10/10**
 
 **Comments:**
-Franceli did the game loop, the Player class, Main, turn handling, and input validation, and then added capture announcements and flexible move input. She kept us on track when it came to git workflow, which kept us from making mistakes. She was very helpful when clarification was needed and her part of the project done early.s
+Franceli did the Piece movement, Capturing pieces, and end game notification. She got her part done very well and efficiently which made completing the PDF a lot less stressful. She made her part very intuitive and easy to use. Overall she did a very good job with her part and was very easy to work with.

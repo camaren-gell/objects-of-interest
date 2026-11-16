@@ -46,29 +46,33 @@ public class ChessboardGUI extends JFrame {
         setLayout(new BorderLayout());
 
         // Phase 2: New, Save, and Load menu
-        GameMenuBar menuBar = new GameMenuBar(
-                this::handleNewGame,
-                this::handleSaveGame,
-                this::handleLoadGame
-        );
-        setJMenuBar(menuBar);
+// Phase 2: Game Menu, turn display, and Settings
+JPanel topPanel = new JPanel(new BorderLayout());
 
-        // Settings button
-        JPanel topPanel = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT)
-        );
+turnLabel.setFont(new Font("Arial", Font.BOLD, 18));
+topPanel.add(turnLabel, BorderLayout.CENTER);
 
-        JButton settingsButton = new JButton("⚙ Settings");
+JButton settingsButton = new JButton("Settings");
 
-        settingsButton.addActionListener(e -> {
-            SettingsWindow settings = new SettingsWindow(this);
-            settings.setVisible(true);
-        });
+settingsButton.addActionListener(e -> {
+    SettingsWindow settings = new SettingsWindow(this);
+    settings.setVisible(true);
+});
 
-        turnLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        topPanel.add(turnLabel);
-        topPanel.add(settingsButton);
-        add(topPanel, BorderLayout.NORTH);
+GameMenuButton gameMenuButton = new GameMenuButton(
+        settingsButton,
+        this::handleNewGame,
+        this::handleSaveGame,
+        this::handleLoadGame
+);
+
+JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+controls.add(gameMenuButton);
+controls.add(settingsButton);
+
+topPanel.add(controls, BorderLayout.EAST);
+add(topPanel, BorderLayout.NORTH);
+
 
         // Chessboard with centered Spider-Man watermark
         chessboard = new JPanel(new GridLayout(SIZE, SIZE)) {
