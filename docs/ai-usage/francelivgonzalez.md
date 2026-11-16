@@ -52,3 +52,38 @@ I compiled the project using `javac`, tested moves through the console, and gene
 Using AI helped me better understand Java and the software development process. I found it particularly useful when I needed an explanation of why something worked or why an error occurred.
 
 The most valuable part of the experience was being able to ask questions, apply what I learned, and test whether my implementation behaved correctly.
+
+# AI Usage Log - Franceli Gonzalez
+
+**Project:** Java Chess Game - Phase 2  
+**GitHub Username:** francelivgonzalez  
+**Assigned Section:** Chess Gameplay and Movement Implementation
+
+## AI Tool Used
+ChatGPT
+
+## How I Used AI
+
+I used ChatGPT throughout Phase 2 to help troubleshoot implementation issues, understand Java Swing behavior, and manage Git integration.
+
+### 1. Gameplay Implementation
+
+I used ChatGPT to review the implementation of piece selection, movement, capturing, turn switching, and king victory detection. I tested these features locally to verify their behavior.
+
+### 2. GUI Integration
+
+I used ChatGPT to assist with combining my gameplay implementation with the existing team GUI. 
+
+### 3. Debugging and Testing
+
+I used ChatGPT to interpret Java compilation errors, identify unresolved merge conflicts, and troubleshoot issues during integration.
+
+### 4. Git and Collaboration
+
+I used ChatGPT for guidance on branch management, conflict resolution, and integrating changes between `dev` and `main`.
+
+I executed the Git commands locally and reviewed the results before committing and merging changes.
+
+## Reflection
+
+AI was useful for troubleshooting and understanding how different parts of the project worked together. Testing the implementation helped me identify issues and verify that the integrated features behaved as expected.
