@@ -1,3 +1,4 @@
+
 package chess.board;
 
 import chess.pieces.Bishop;
@@ -9,23 +10,26 @@ import chess.pieces.Piece;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
 
-// Handles the chessboard and its pieces.
+/**
+ * Represents the chessboard and manages piece placement,
+ * movement, and captures.
+ */
 public class Board {
 
     private final Piece[][] squares = new Piece[8][8];
 
-    // Sets up the board.
+    /**
+     * Creates a chessboard with the standard starting positions.
+     */
     public Board() {
         initializeBoard();
     }
 
-    // Puts all the pieces in their starting spots.
+    /**
+     * Initializes all chess pieces in their starting positions.
+     */
     public void initializeBoard() {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                squares[row][col] = null;
-            }
-        }
+        clear();
 
         for (int col = 0; col < 8; col++) {
             squares[0][col] = createPiece(col, Color.BLACK, 0, col);
@@ -35,7 +39,15 @@ public class Board {
         }
     }
 
-    // Creates the correct piece for the back row.
+    /**
+     * Creates a piece for the back row.
+     *
+     * @param col column of the piece
+     * @param color color of the piece
+     * @param row starting row
+     * @param column starting column
+     * @return the created chess piece
+     */
     private Piece createPiece(int col, Color color, int row, int column) {
         Position position = new Position(row, column);
 
@@ -58,7 +70,9 @@ public class Board {
         }
     }
 
-    // Prints the board.
+    /**
+     * Displays the chessboard in the console.
+     */
     public void display() {
         System.out.println("    A    B    C    D    E    F    G    H");
         System.out.println("  +----+----+----+----+----+----+----+----+");
@@ -79,12 +93,23 @@ public class Board {
         System.out.println("    A    B    C    D    E    F    G    H");
     }
 
-    // Checks if a position is on the board.
+    /**
+     * Checks whether coordinates are inside the board.
+     *
+     * @param row board row
+     * @param col board column
+     * @return true if coordinates are valid
+     */
     public boolean isInsideBoard(int row, int col) {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
     }
 
-    // Returns the piece at a position, or null if it's empty.
+    /**
+     * Returns the piece at a specified position.
+     *
+     * @param position square to inspect
+     * @return the piece or null
+     */
     public Piece getPiece(Position position) {
         if (position == null || !position.isInBounds()) {
             throw new IllegalArgumentException("Invalid board position.");
@@ -93,7 +118,14 @@ public class Board {
         return squares[position.getRow()][position.getColumn()];
     }
 
-    // Moves a piece if the destination is valid and allowed.
+    /**
+     * Original Phase 1 movement method.
+     * Uses standard piece movement validation.
+     *
+     * @param from starting square
+     * @param to destination square
+     * @return true if the move succeeds
+     */
     public boolean movePiece(Position from, Position to) {
         if (from == null || to == null
                 || !from.isInBounds() || !to.isInBounds()) {
@@ -108,12 +140,59 @@ public class Board {
 
         squares[to.getRow()][to.getColumn()] = piece;
         squares[from.getRow()][from.getColumn()] = null;
+
         piece.move(to);
 
         return true;
     }
 
-        // Removes every piece from the board.
+    /**
+     * Moves a piece to any valid square for Phase 2.
+     *
+     * Standard chess movement restrictions are not enforced.
+     * An opposing piece at the destination is captured.
+     * Friendly pieces cannot be captured.
+     *
+     * @param from starting square
+     * @param to destination square
+     * @return true if the move succeeds
+     */
+    public boolean movePieceFree(Position from, Position to) {
+        if (from == null || to == null
+                || !from.isInBounds() || !to.isInBounds()) {
+            return false;
+        }
+
+        if (from.getRow() == to.getRow()
+                && from.getColumn() == to.getColumn()) {
+            return false;
+        }
+
+        Piece movingPiece = getPiece(from);
+        Piece targetPiece = getPiece(to);
+
+        if (movingPiece == null) {
+            return false;
+        }
+
+        // Prevent capturing a friendly piece.
+        if (targetPiece != null
+                && targetPiece.getColor() == movingPiece.getColor()) {
+            return false;
+        }
+
+        // Move the piece and capture an opponent if present.
+        squares[to.getRow()][to.getColumn()] = movingPiece;
+        squares[from.getRow()][from.getColumn()] = null;
+
+        movingPiece.move(to);
+
+        return true;
+    }
+
+    /**
+     * Removes all pieces from the chessboard.
+     */
     public void clear() {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -122,11 +201,22 @@ public class Board {
         }
     }
 
-    // Places a piece on a square (used when loading a saved game).
+    /**
+     * Places a piece at a specified position.
+     * Used when loading a saved game.
+     *
+     * @param position destination square
+     * @param piece piece to place
+     */
     public void setPiece(Position position, Piece piece) {
         if (position == null || !position.isInBounds()) {
             throw new IllegalArgumentException("Invalid board position.");
         }
+
         squares[position.getRow()][position.getColumn()] = piece;
+
+        if (piece != null) {
+            piece.move(position);
+        }
     }
 }
