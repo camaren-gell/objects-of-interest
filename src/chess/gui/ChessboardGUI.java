@@ -14,76 +14,88 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Phase 2 Swing chess interface.
+ * Combines click-to-move and king capture with the
+ * customizable chessboard and game menu controls.
+ */
 public class ChessboardGUI extends JFrame {
 
     private static final int SIZE = 8;
+    private static final Color SELECTED =
+            new Color(255, 235, 90);
 
     private final Board board;
-    private final JButton[][] squares = new JButton[SIZE][SIZE];
+    private final JButton[][] squares =
+            new JButton[SIZE][SIZE];
     private final JPanel chessboard;
 
+    private final JLabel turnLabel =
+            new JLabel("White's Turn", SwingConstants.CENTER);
+
+    private chess.pieces.Color currentTurn =
+            chess.pieces.Color.WHITE;
+
+    private Position selectedPosition;
     private BufferedImage spiderEyesLogo;
 
-    // Settings
     private String currentBoardStyle = "Spider-Man";
     private String currentPieceStyle = "Black & Green";
     private String currentBoardSize = "Medium";
 
-    private static final Color SELECTED = new Color(255, 235, 90);
-    private Position selectedPosition = null;
-    private final JLabel turnLabel = new JLabel("White's Turn", SwingConstants.CENTER);
-
-    // Phase 2 game storage
-    private chess.pieces.Color currentTurn = chess.pieces.Color.WHITE;
-
+    /**
+     * Constructs the customizable chessboard
+     * and attaches input handlers.
+     */
     public ChessboardGUI() {
-        board = new Board();
 
+        board = new Board();
         loadSpiderEyesLogo();
 
-        setTitle("Spider-Man Chess");
+        setTitle("Spider-Man Chess - Phase 2");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Top row: Game Menu on the left, turn label and Settings on the right
-        JPanel topPanel = new JPanel(new BorderLayout());
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-        JButton settingsButton = new JButton("⚙ Settings");
-
-        settingsButton.addActionListener(e -> {
-            SettingsWindow settings = new SettingsWindow(this);
-            settings.setVisible(true);
-        });
-
-        // Phase 2: New, Save, and Load menu button
-        GameMenuButton gameMenuButton = new GameMenuButton(
-                settingsButton,
+        // Game controls: New, Save, and Load.
+        setJMenuBar(new GameMenuBar(
                 this::handleNewGame,
                 this::handleSaveGame,
                 this::handleLoadGame
+        ));
+
+        // Top panel showing turn and settings button.
+        JPanel topPanel = new JPanel(new BorderLayout());
+
+        turnLabel.setFont(
+                new Font("Arial", Font.BOLD, 18)
         );
 
-        turnLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        leftPanel.add(gameMenuButton);
-        rightPanel.add(turnLabel);
-        rightPanel.add(settingsButton);
-        topPanel.add(leftPanel, BorderLayout.WEST);
-        topPanel.add(rightPanel, BorderLayout.EAST);
+        topPanel.add(turnLabel, BorderLayout.CENTER);
+
+        JButton settingsButton = new JButton("Settings");
+
+        settingsButton.addActionListener(e -> {
+            SettingsWindow settings =
+                    new SettingsWindow(this);
+            settings.setVisible(true);
+        });
+
+        topPanel.add(settingsButton, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
-        // Chessboard with centered Spider-Man watermark
+        // Draw the Spider-Man watermark behind the board.
         chessboard = new JPanel(new GridLayout(SIZE, SIZE)) {
 
             @Override
             protected void paintComponent(Graphics g) {
+
                 super.paintComponent(g);
 
-                if (currentBoardStyle.equals("Spider-Man")
+                if ("Spider-Man".equals(currentBoardStyle)
                         && spiderEyesLogo != null) {
 
-                    Graphics2D g2 = (Graphics2D) g.create();
+                    Graphics2D g2 =
+                            (Graphics2D) g.create();
 
                     g2.setRenderingHint(
                             RenderingHints.KEY_INTERPOLATION,
@@ -106,10 +118,8 @@ public class ChessboardGUI extends JFrame {
 
                     g2.drawImage(
                             spiderEyesLogo,
-                            x,
-                            y,
-                            logoSize,
-                            logoSize,
+                            x, y,
+                            logoSize, logoSize,
                             this
                     );
 
@@ -119,45 +129,93 @@ public class ChessboardGUI extends JFrame {
         };
 
         chessboard.setOpaque(true);
-        chessboard.setPreferredSize(new Dimension(600, 600));
+        chessboard.setPreferredSize(
+                new Dimension(600, 600)
+        );
 
-        // Create 64 individual squares
+        // Create 64 clickable squares.
         for (int row = 0; row < SIZE; row++) {
 
             for (int col = 0; col < SIZE; col++) {
 
-                SpiderSquare square = new SpiderSquare();
+                JButton square = new SpiderSquare();
+
+                square.setMargin(
+                        new Insets(0, 0, 0, 0)
+                );
 
                 square.setFont(
                         new Font("Serif", Font.PLAIN, 54)
                 );
 
-                final int selectedRow = row;
-                final int selectedCol = col;
-                square.addActionListener(e -> handleSquareClick(selectedRow, selectedCol));
+                final int clickRow = row;
+                final int clickCol = col;
+
+                square.addActionListener(e ->
+                        handleSquareClick(clickRow, clickCol)
+                );
 
                 squares[row][col] = square;
                 chessboard.add(square);
             }
         }
 
-        JPanel boardWithCoordinates = new JPanel(new BorderLayout());
-        JPanel columnLabels = new JPanel(new GridLayout(1, SIZE));
-        for (char col = 'A'; col <= 'H'; col++) {
-            JLabel label = new JLabel(String.valueOf(col), SwingConstants.CENTER);
-            label.setFont(new Font("Arial", Font.BOLD, 16));
-            columnLabels.add(label);
+        // Add coordinate labels.
+        JPanel labelsAndBoard =
+                new JPanel(new BorderLayout());
+
+        JPanel rows =
+                new JPanel(new GridLayout(SIZE, 1));
+
+        for (int rank = 8; rank >= 1; rank--) {
+
+            JLabel label = new JLabel(
+                    " " + rank + " ",
+                    SwingConstants.CENTER
+            );
+
+            label.setFont(
+                    new Font("Arial", Font.BOLD, 16)
+            );
+
+            rows.add(label);
         }
-        JPanel rowLabels = new JPanel(new GridLayout(SIZE, 1));
-        for (int row = 8; row >= 1; row--) {
-            JLabel label = new JLabel(" " + row + " ", SwingConstants.CENTER);
-            label.setFont(new Font("Arial", Font.BOLD, 16));
-            rowLabels.add(label);
+
+        JPanel columns =
+                new JPanel(new GridLayout(1, SIZE));
+
+        for (char file = 'A'; file <= 'H'; file++) {
+
+            JLabel label = new JLabel(
+                    String.valueOf(file),
+                    SwingConstants.CENTER
+            );
+
+            label.setFont(
+                    new Font("Arial", Font.BOLD, 16)
+            );
+
+            columns.add(label);
         }
-        boardWithCoordinates.add(columnLabels, BorderLayout.SOUTH);
-        boardWithCoordinates.add(rowLabels, BorderLayout.WEST);
-        boardWithCoordinates.add(chessboard, BorderLayout.CENTER);
-        add(boardWithCoordinates, BorderLayout.CENTER);
+
+        JPanel bottom = new JPanel(new BorderLayout());
+
+        JLabel corner = new JLabel(" 8 ");
+
+        corner.setFont(
+                new Font("Arial", Font.BOLD, 16)
+        );
+
+        corner.setForeground(bottom.getBackground());
+
+        bottom.add(corner, BorderLayout.WEST);
+        bottom.add(columns, BorderLayout.CENTER);
+
+        labelsAndBoard.add(rows, BorderLayout.WEST);
+        labelsAndBoard.add(chessboard, BorderLayout.CENTER);
+        labelsAndBoard.add(bottom, BorderLayout.SOUTH);
+
+        add(labelsAndBoard, BorderLayout.CENTER);
 
         applyBoardAppearance();
         updateBoard();
@@ -166,56 +224,268 @@ public class ChessboardGUI extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    // Load Spider-Man eyes image
-    private void loadSpiderEyesLogo() {
+    /**
+     * Resets the game to the initial chess positions.
+     */
+    private void handleNewGame() {
 
-        try {
+        board.initializeBoard();
+        currentTurn = chess.pieces.Color.WHITE;
+        selectedPosition = null;
 
-            java.net.URL imageURL =
-                    getClass().getResource("spider-eyes-watermark.png");
+        updateBoard();
+    }
 
-            if (imageURL != null) {
+    /**
+     * Saves the current board and player turn.
+     */
+    private void handleSaveGame() {
 
-                spiderEyesLogo = ImageIO.read(imageURL);
+        JFileChooser chooser = new JFileChooser();
 
-            } else {
+        if (chooser.showSaveDialog(this)
+                == JFileChooser.APPROVE_OPTION) {
 
-                File imageFile = new File(
-                        "src/chess/gui/spider-eyes-watermark.png"
+            try {
+
+                GameStorage.save(
+                        board,
+                        currentTurn,
+                        chooser.getSelectedFile()
                 );
 
-                if (imageFile.exists()) {
-                    spiderEyesLogo = ImageIO.read(imageFile);
-                }
-            }
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Game saved successfully!"
+                );
 
-            if (spiderEyesLogo == null) {
-                System.out.println(
-                        "Spider-Man eyes image could not be loaded."
+            } catch (IOException ex) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to save game: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
             }
-
-        } catch (IOException e) {
-
-            System.out.println(
-                    "Error loading Spider-Man logo: " + e.getMessage()
-            );
         }
     }
 
-    // Apply SettingsWindow selections
+    /**
+     * Loads a saved board and restores the player turn.
+     */
+    private void handleLoadGame() {
+
+        JFileChooser chooser = new JFileChooser();
+
+        if (chooser.showOpenDialog(this)
+                == JFileChooser.APPROVE_OPTION) {
+
+            try {
+
+                currentTurn = GameStorage.load(
+                        chooser.getSelectedFile(),
+                        board
+                );
+
+                selectedPosition = null;
+                updateBoard();
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Game loaded successfully!"
+                );
+
+            } catch (IOException ex) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to load game: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
+    /**
+     * Handles selecting and moving chess pieces.
+     *
+     * Phase 2 allows pieces to move to any square.
+     * Players cannot capture their own pieces.
+     * Capturing a King ends the game.
+     *
+     * @param row clicked row
+     * @param col clicked column
+     */
+    private void handleSquareClick(int row, int col) {
+
+        Position destination =
+                new Position(row, col);
+
+        Piece target =
+                board.getPiece(destination);
+
+        // First click selects a piece.
+        if (selectedPosition == null) {
+
+            if (target != null
+                    && target.getColor() == currentTurn) {
+
+                selectedPosition = destination;
+                updateBoard();
+            }
+
+            return;
+        }
+
+        // Clicking the selected piece cancels selection.
+        if (selectedPosition.getRow() == row
+                && selectedPosition.getColumn() == col) {
+
+            selectedPosition = null;
+            updateBoard();
+            return;
+        }
+
+        Piece movingPiece =
+                board.getPiece(selectedPosition);
+
+        if (movingPiece == null) {
+
+            selectedPosition = null;
+            updateBoard();
+            return;
+        }
+
+        // Clicking a friendly piece changes selection.
+        if (target != null
+                && target.getColor() == movingPiece.getColor()) {
+
+            selectedPosition = destination;
+            updateBoard();
+            return;
+        }
+
+        // Remember what was captured before moving.
+        Piece capturedPiece = target;
+
+        boolean moved = board.movePieceFree(
+                selectedPosition,
+                destination
+        );
+
+        if (!moved) {
+            return;
+        }
+
+        selectedPosition = null;
+
+        // King capture detection.
+        if (capturedPiece instanceof King) {
+
+            updateBoard();
+
+            String winner =
+                    movingPiece.getColor()
+                    == chess.pieces.Color.WHITE
+                    ? "White"
+                    : "Black";
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    winner
+                            + " wins! The opponent's King was captured.",
+                    "Game Over",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            dispose();
+            System.exit(0);
+            return;
+        }
+
+        // Change active player.
+        currentTurn =
+                currentTurn == chess.pieces.Color.WHITE
+                ? chess.pieces.Color.BLACK
+                : chess.pieces.Color.WHITE;
+
+        updateBoard();
+    }
+
+    /**
+     * Updates the board pieces, selected square,
+     * and current turn display.
+     */
+    public void updateBoard() {
+
+        Color[] boardColors = getBoardColors();
+
+        for (int row = 0; row < SIZE; row++) {
+
+            for (int col = 0; col < SIZE; col++) {
+
+                JButton square = squares[row][col];
+
+                boolean selected =
+                        selectedPosition != null
+                        && selectedPosition.getRow() == row
+                        && selectedPosition.getColumn() == col;
+
+                if (selected) {
+
+                    square.setBackground(SELECTED);
+
+                } else {
+
+                    square.setBackground(
+                            boardColors[(row + col) % 2]
+                    );
+                }
+
+                Piece piece = board.getPiece(
+                        new Position(row, col)
+                );
+
+                square.setText(
+                        piece == null
+                        ? ""
+                        : getPieceSymbol(piece)
+                );
+
+                if (piece != null) {
+                    square.setForeground(
+                            getPieceColor(piece)
+                    );
+                }
+            }
+        }
+
+        turnLabel.setText(
+                currentTurn == chess.pieces.Color.WHITE
+                ? "White's Turn"
+                : "Black's Turn"
+        );
+
+        chessboard.repaint();
+    }
+
+    /**
+     * Applies customization choices from SettingsWindow.
+     *
+     * @param boardStyle selected board theme
+     * @param pieceStyle selected piece color theme
+     * @param boardSize selected board size
+     */
     public void applySettings(
             String boardStyle,
             String pieceStyle,
-            String boardSize
-    ) {
+            String boardSize) {
 
         currentBoardStyle = boardStyle;
         currentPieceStyle = pieceStyle;
         currentBoardSize = boardSize;
-
-        applyBoardAppearance();
-        updateBoard();
 
         int dimension;
 
@@ -246,325 +516,165 @@ public class ChessboardGUI extends JFrame {
             for (int col = 0; col < SIZE; col++) {
 
                 squares[row][col].setFont(
-                        new Font("Serif", Font.PLAIN, fontSize)
+                        new Font(
+                                "Serif",
+                                Font.PLAIN,
+                                fontSize
+                        )
                 );
             }
         }
 
-        chessboard.revalidate();
-        chessboard.repaint();
+        applyBoardAppearance();
+        updateBoard();
 
+        chessboard.revalidate();
         revalidate();
+
         pack();
         setLocationRelativeTo(null);
     }
 
-    // Change board colors
+    /**
+     * Updates chessboard colors for the selected theme.
+     */
     private void applyBoardAppearance() {
 
-        Color light;
-        Color dark;
+        Color[] colors = getBoardColors();
+
+        for (int row = 0; row < SIZE; row++) {
+
+            for (int col = 0; col < SIZE; col++) {
+
+                squares[row][col].setBackground(
+                        colors[(row + col) % 2]
+                );
+            }
+        }
+
+        chessboard.repaint();
+    }
+
+    /**
+     * Returns the light and dark colors for the current theme.
+     *
+     * @return two alternating square colors
+     */
+    private Color[] getBoardColors() {
 
         switch (currentBoardStyle) {
 
             case "Marble":
-
-                light = new Color(235, 235, 235);
-                dark = new Color(125, 130, 140);
-                break;
+                return new Color[]{
+                        new Color(235, 235, 235),
+                        new Color(125, 130, 140)
+                };
 
             case "Wooden":
-
-                light = new Color(240, 217, 181);
-                dark = new Color(181, 136, 99);
-                break;
+                return new Color[]{
+                        new Color(240, 217, 181),
+                        new Color(181, 136, 99)
+                };
 
             case "Spider-Man":
-
             default:
-
-                light = new Color(195, 35, 48);
-                dark = new Color(23, 65, 130);
-                break;
-        }
-
-        for (int row = 0; row < SIZE; row++) {
-
-            for (int col = 0; col < SIZE; col++) {
-
-                if ((row + col) % 2 == 0) {
-                    squares[row][col].setBackground(light);
-                } else {
-                    squares[row][col].setBackground(dark);
-                }
-            }
-        }
-
-        chessboard.repaint();
-    }
-
-    // Phase 2: New Game
-    private void handleNewGame() {
-
-        board.initializeBoard();
-        currentTurn = chess.pieces.Color.WHITE;
-        selectedPosition = null;
-        updateBoard();
-    }
-
-    // Phase 2: Save Game
-    private void handleSaveGame() {
-
-        JFileChooser chooser = new JFileChooser();
-
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-
-            File saveFile = chooser.getSelectedFile();
-
-            try {
-
-                GameStorage.save(board, currentTurn, saveFile);
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Game saved successfully!"
-                );
-
-            } catch (IOException ex) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Failed to save game: " + ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
-        }
-    }
-
-    // Phase 2: Load Game
-    private void handleLoadGame() {
-
-        JFileChooser chooser = new JFileChooser();
-
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-
-            File saveFile = chooser.getSelectedFile();
-
-            try {
-
-                currentTurn = GameStorage.load(saveFile, board);
-                selectedPosition = null;
-                updateBoard();
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Game loaded successfully!"
-                );
-
-            } catch (IOException ex) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Failed to load game: " + ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
+                return new Color[]{
+                        new Color(195, 35, 48),
+                        new Color(23, 65, 130)
+                };
         }
     }
 
     /**
-     * Handles selecting pieces, moving pieces, capturing
-     * opponents, and detecting King captures.
-     *
-     * @param row clicked row
-     * @param col clicked column
+     * Loads the Spider-Man eyes watermark image.
      */
-    private void handleSquareClick(int row, int col) {
+    private void loadSpiderEyesLogo() {
 
-        Position clickedPosition =
-                new Position(row, col);
+        try {
 
-        Piece clickedPiece =
-                board.getPiece(clickedPosition);
+            java.net.URL resource =
+                    getClass().getResource(
+                            "spider-eyes-watermark.png"
+                    );
 
-        // First click: select a piece.
-        if (selectedPosition == null) {
+            if (resource != null) {
 
-            if (clickedPiece == null) {
-                return;
+                spiderEyesLogo = ImageIO.read(resource);
+
+            } else {
+
+                File file = new File(
+                        "src/chess/gui/spider-eyes-watermark.png"
+                );
+
+                if (file.exists()) {
+                    spiderEyesLogo = ImageIO.read(file);
+                }
             }
 
-            if (clickedPiece.getColor() != currentTurn) {
-                return;
+            if (spiderEyesLogo == null) {
+
+                System.out.println(
+                        "Spider-Man eyes image could not be loaded."
+                );
             }
 
-            selectedPosition = clickedPosition;
+        } catch (IOException e) {
 
-            updateBoard();
-            return;
-        }
-
-        // Clicking the selected piece again cancels.
-        if (selectedPosition.getRow() == row
-                && selectedPosition.getColumn() == col) {
-
-            selectedPosition = null;
-
-            updateBoard();
-            return;
-        }
-
-        Piece movingPiece =
-                board.getPiece(selectedPosition);
-
-        if (movingPiece == null) {
-
-            selectedPosition = null;
-            updateBoard();
-            return;
-        }
-
-        // Selecting another friendly piece changes selection.
-        if (clickedPiece != null
-                && clickedPiece.getColor()
-                == movingPiece.getColor()) {
-
-            selectedPosition = clickedPosition;
-
-            updateBoard();
-            return;
-        }
-
-        // Remember whether an opponent's King is captured.
-        Piece capturedPiece = clickedPiece;
-
-        boolean moved = board.movePieceFree(
-                selectedPosition,
-                clickedPosition
-        );
-
-        if (!moved) {
-            return;
-        }
-
-        selectedPosition = null;
-
-        updateBoard();
-
-        // Declare the winner if a King is captured.
-        if (capturedPiece instanceof King) {
-
-            String winner =
-                    movingPiece.getColor()
-                    == chess.pieces.Color.WHITE
-                    ? "White"
-                    : "Black";
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    winner + " wins! The opponent's King was captured.",
-                    "Game Over",
-                    JOptionPane.INFORMATION_MESSAGE
+            System.out.println(
+                    "Error loading Spider-Man logo: "
+                            + e.getMessage()
             );
-
-            dispose();
-            System.exit(0);
-            return;
         }
-
-        // Switch turns.
-        currentTurn =
-                currentTurn == chess.pieces.Color.WHITE
-                ? chess.pieces.Color.BLACK
-                : chess.pieces.Color.WHITE;
-
-        updateBoard();
     }
 
-    // Display chess pieces
-    public void updateBoard() {
-
-        applyBoardAppearance();
-
-        for (int row = 0; row < SIZE; row++) {
-
-            for (int col = 0; col < SIZE; col++) {
-
-                Position position = new Position(row, col);
-
-                Piece piece = board.getPiece(position);
-
-                if (piece == null) {
-
-                    squares[row][col].setText("");
-
-                } else {
-
-                    squares[row][col].setText(
-                            getPieceSymbol(piece)
-                    );
-
-                    squares[row][col].setForeground(
-                            getPieceColor(piece)
-                    );
-                }
-            }
-        }
-
-        // Preserve the selected-square highlight without resetting the theme.
-        for (int row = 0; row < SIZE; row++) {
-            for (int col = 0; col < SIZE; col++) {
-                if (selectedPosition != null
-                        && selectedPosition.getRow() == row
-                        && selectedPosition.getColumn() == col) {
-                    squares[row][col].setBackground(SELECTED);
-                }
-            }
-        }
-        turnLabel.setText(currentTurn == chess.pieces.Color.WHITE
-                ? "White's Turn" : "Black's Turn");
-        chessboard.repaint();
-    }
-
-    // Convert piece symbols
+    /**
+     * Converts chess pieces into Unicode chess symbols.
+     *
+     * @param piece chess piece
+     * @return Unicode chess symbol
+     */
     private String getPieceSymbol(Piece piece) {
 
         String symbol = piece.getSymbol();
 
-        char type = Character.toLowerCase(
-                symbol.charAt(1)
-        );
+        char type =
+                Character.toLowerCase(symbol.charAt(1));
 
-        boolean white = symbol.charAt(0) == 'w';
+        boolean white =
+                symbol.charAt(0) == 'w';
 
         switch (type) {
 
             case 'p':
-                return white ? "♙" : "♟";
+                return white ? "\u2659" : "\u265F";
 
             case 'r':
-                return white ? "♖" : "♜";
+                return white ? "\u2656" : "\u265C";
 
             case 'n':
-                return white ? "♘" : "♞";
+                return white ? "\u2658" : "\u265E";
 
             case 'b':
-                return white ? "♗" : "♝";
+                return white ? "\u2657" : "\u265D";
 
             case 'q':
-                return white ? "♕" : "♛";
+                return white ? "\u2655" : "\u265B";
 
             case 'k':
-                return white ? "♔" : "♚";
+                return white ? "\u2654" : "\u265A";
 
             default:
                 return "";
         }
     }
 
-    // Change chess piece colors
+    /**
+     * Returns the piece color selected in Settings.
+     *
+     * @param piece chess piece
+     * @return display color
+     */
     private Color getPieceColor(Piece piece) {
 
         boolean white =
@@ -573,49 +683,47 @@ public class ChessboardGUI extends JFrame {
         switch (currentPieceStyle) {
 
             case "Black & Green":
-
                 return white
                         ? new Color(57, 211, 83)
                         : new Color(15, 15, 15);
 
             case "Gold & Silver":
-
                 return white
                         ? new Color(212, 175, 55)
                         : new Color(160, 165, 175);
 
             case "Blue & Red":
-
                 return white
                         ? new Color(30, 90, 210)
                         : new Color(200, 35, 45);
 
             case "Black & White":
-
             default:
-
                 return white
                         ? new Color(250, 250, 250)
                         : new Color(25, 25, 25);
         }
     }
 
-    // Custom square that allows watermark to show through
+    /**
+     * Custom transparent square that allows the
+     * Spider-Man watermark to appear through the board.
+     */
     private static class SpiderSquare extends JButton {
 
-        public SpiderSquare() {
+        SpiderSquare() {
 
             setOpaque(false);
             setContentAreaFilled(false);
             setBorderPainted(false);
             setFocusPainted(false);
-            setMargin(new Insets(0, 0, 0, 0));
         }
 
         @Override
         protected void paintComponent(Graphics g) {
 
-            Graphics2D g2 = (Graphics2D) g.create();
+            Graphics2D g2 =
+                    (Graphics2D) g.create();
 
             g2.setComposite(
                     AlphaComposite.getInstance(
@@ -638,13 +746,15 @@ public class ChessboardGUI extends JFrame {
         }
     }
 
+    /**
+     * Launches the Java Swing chess GUI.
+     *
+     * @param args command-line arguments
+     */
     public static void main(String[] args) {
 
-        SwingUtilities.invokeLater(() -> {
-
-            ChessboardGUI gui = new ChessboardGUI();
-
-            gui.setVisible(true);
-        });
+        SwingUtilities.invokeLater(() ->
+                new ChessboardGUI().setVisible(true)
+        );
     }
 }
